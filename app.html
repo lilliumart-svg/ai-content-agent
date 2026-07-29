@@ -40,6 +40,11 @@
   .assign-preview{grid-column:1/-1; font-size:12px; color:var(--muted); background:var(--bg); border-radius:8px; padding:10px 12px; display:none;}
   .assign-preview b{color:var(--navy);}
   .dist-box{display:flex;align-items:center;gap:6px;background:#F3F4F6;border:1px solid var(--line);padding:6px 10px;border-radius:8px;cursor:pointer;color:#4B5563;}
+  .budget-row{display:flex; align-items:center; gap:12px; margin-bottom:10px;}
+  .budget-label{width:140px; font-size:12px; color:var(--navy); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .budget-bar-wrap{flex:1; height:22px; background:#F3F4F6; border-radius:6px; overflow:hidden; display:flex;}
+  .budget-seg{height:100%;}
+  .budget-total{width:90px; text-align:right; font-size:11.5px; color:var(--muted); white-space:nowrap;}
 
   table{border-collapse:collapse; width:100%; font-size:12px;}
   th{padding:7px 8px; text-align:left; font-weight:600; color:var(--muted); border-bottom:1px solid var(--line); white-space:nowrap;}
@@ -74,7 +79,7 @@
 </style>
 </head>
 <body>
-<script type="application/json" id="seed-data">[{"ID": "C-01", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Промо-запуск", "Канал": "Performance Max", "Назначение (куда ведём)": "samsung.kz", "Формат": "Display", "Старт": "2026-07-06", "Финиш": "2026-07-26", "Статус": "Готово"}, {"ID": "C-02", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Промо-запуск", "Канал": "Google Search", "Назначение (куда ведём)": "samsung.kz", "Формат": "Search RSA", "Старт": "2026-07-06", "Финиш": "2026-07-26", "Статус": "Готово"}, {"ID": "C-03", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Маркетплейс", "Канал": "Kaspi Ads", "Назначение (куда ведём)": "Kaspi.kz", "Формат": "Banner", "Старт": "2026-07-06", "Финиш": "2026-07-31", "Статус": "В работе"}, {"ID": "C-04", "Модель": "RB37A5411EL/WT", "Тип кампании": "Retail support", "Канал": "Meta", "Назначение (куда ведём)": "Technodom", "Формат": "Feed Square", "Старт": "2026-07-13", "Финиш": "2026-07-27", "Статус": "В работе"}, {"ID": "C-05", "Модель": "RB37A5411EL/WT", "Тип кампании": "Retail support", "Канал": "Meta", "Назначение (куда ведём)": "Sulpak", "Формат": "Feed Portrait", "Старт": "2026-07-13", "Финиш": "2026-07-27", "Статус": "В работе"}, {"ID": "C-06", "Модель": "RB53DG703EB1WT", "Тип кампании": "Медийка", "Канал": "YouTube", "Назначение (куда ведём)": "samsung.kz", "Формат": "Video 16:9", "Старт": "2026-07-13", "Финиш": "2026-08-03", "Статус": "Не начато"}, {"ID": "C-07", "Модель": "NV75T9979CD/WT", "Тип кампании": "Промо-запуск", "Канал": "Performance Max", "Назначение (куда ведём)": "samsung.kz", "Формат": "Display", "Старт": "2026-07-20", "Финиш": "2026-08-10", "Статус": "Не начато"}, {"ID": "C-08", "Модель": "NV75T9979CD/WT", "Тип кампании": "Маркетплейс", "Канал": "Ozon Ads", "Назначение (куда ведём)": "Ozon", "Формат": "Banner", "Старт": "2026-07-20", "Финиш": "2026-08-10", "Статус": "Не начато"}, {"ID": "C-09", "Модель": "Bespoke line", "Тип кампании": "Медийка", "Канал": "Meta", "Назначение (куда ведём)": "samsung.kz", "Формат": "Stories/Reels", "Старт": "2026-07-20", "Финиш": "2026-08-17", "Статус": "Не начато"}, {"ID": "C-10", "Модель": "WW65AK4S21CELT", "Тип кампании": "Always-on", "Канал": "Google Search", "Назначение (куда ведём)": "samsung.kz", "Формат": "Search RSA", "Старт": "2026-07-27", "Финиш": "2026-08-24", "Статус": "Не начато"}, {"ID": "C-11", "Модель": "RB37A5411EL/WT", "Тип кампании": "Retail support", "Канал": "Display", "Назначение (куда ведём)": "Mechta", "Формат": "Display", "Старт": "2026-07-27", "Финиш": "2026-08-10", "Статус": "Не начато"}, {"ID": "C-12", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Always-on", "Канал": "TikTok In Feed", "Назначение (куда ведём)": "samsung.kz", "Формат": "Stories/Reels", "Старт": "2026-07-27", "Финиш": "2026-08-24", "Статус": "Не начато"}]</script>
+<script type="application/json" id="seed-data">[{"ID": "C-01", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Промо-запуск", "Канал": "Performance Max", "Назначение (куда ведём)": "samsung.kz", "Формат": "Display", "Старт": "2026-07-06", "Финиш": "2026-07-26", "Статус": "Готово", "Бюджет": 800000}, {"ID": "C-02", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Промо-запуск", "Канал": "Google Search", "Назначение (куда ведём)": "samsung.kz", "Формат": "Search RSA", "Старт": "2026-07-06", "Финиш": "2026-07-26", "Статус": "Готово", "Бюджет": 900000}, {"ID": "C-03", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Маркетплейс", "Канал": "Kaspi Ads", "Назначение (куда ведём)": "Kaspi.kz", "Формат": "Banner", "Старт": "2026-07-06", "Финиш": "2026-07-31", "Статус": "В работе", "Бюджет": 450000}, {"ID": "C-04", "Модель": "RB37A5411EL/WT", "Тип кампании": "Retail support", "Канал": "Meta", "Назначение (куда ведём)": "Technodom", "Формат": "Feed Square", "Старт": "2026-07-13", "Финиш": "2026-07-27", "Статус": "В работе", "Бюджет": 320000}, {"ID": "C-05", "Модель": "RB37A5411EL/WT", "Тип кампании": "Retail support", "Канал": "Meta", "Назначение (куда ведём)": "Sulpak", "Формат": "Feed Portrait", "Старт": "2026-07-13", "Финиш": "2026-07-27", "Статус": "В работе", "Бюджет": 300000}, {"ID": "C-06", "Модель": "RB53DG703EB1WT", "Тип кампании": "Медийка", "Канал": "YouTube", "Назначение (куда ведём)": "samsung.kz", "Формат": "Video 16:9", "Старт": "2026-07-13", "Финиш": "2026-08-03", "Статус": "Не начато", "Бюджет": 1200000}, {"ID": "C-07", "Модель": "NV75T9979CD/WT", "Тип кампании": "Промо-запуск", "Канал": "Performance Max", "Назначение (куда ведём)": "samsung.kz", "Формат": "Display", "Старт": "2026-07-20", "Финиш": "2026-08-10", "Статус": "Не начато", "Бюджет": 700000}, {"ID": "C-08", "Модель": "NV75T9979CD/WT", "Тип кампании": "Маркетплейс", "Канал": "Ozon Ads", "Назначение (куда ведём)": "Ozon", "Формат": "Banner", "Старт": "2026-07-20", "Финиш": "2026-08-10", "Статус": "Не начато", "Бюджет": 400000}, {"ID": "C-09", "Модель": "Bespoke line", "Тип кампании": "Медийка", "Канал": "Meta", "Назначение (куда ведём)": "samsung.kz", "Формат": "Stories/Reels", "Старт": "2026-07-20", "Финиш": "2026-08-17", "Статус": "Не начато", "Бюджет": 950000}, {"ID": "C-10", "Модель": "WW65AK4S21CELT", "Тип кампании": "Always-on", "Канал": "Google Search", "Назначение (куда ведём)": "samsung.kz", "Формат": "Search RSA", "Старт": "2026-07-27", "Финиш": "2026-08-24", "Статус": "Не начато", "Бюджет": 600000}, {"ID": "C-11", "Модель": "RB37A5411EL/WT", "Тип кампании": "Retail support", "Канал": "Display", "Назначение (куда ведём)": "Mechta", "Формат": "Display", "Старт": "2026-07-27", "Финиш": "2026-08-10", "Статус": "Не начато", "Бюджет": 280000}, {"ID": "C-12", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Always-on", "Канал": "TikTok In Feed", "Назначение (куда ведём)": "samsung.kz", "Формат": "Stories/Reels", "Старт": "2026-07-27", "Финиш": "2026-08-24", "Статус": "Не начато", "Бюджет": 500000}]</script>
 <div class="wrap">
   <header>
     <div>
@@ -114,6 +119,7 @@
       </div>
       <div><label>Дата старта</label><input id="f-start" type="date"></div>
       <div><label>Дата финиша</label><input id="f-end" type="date"></div>
+      <div><label>Бюджет, ₸</label><input id="f-budget" type="number" placeholder="800000"></div>
       <div><button class="btn-primary" onclick="addCampaign()">+ Добавить и назначить</button></div>
       <div class="assign-preview" id="assignPreview" style="grid-column:1/-1;"></div>
       <div id="channelOptions" style="grid-column:1/-1; display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px;"></div>
@@ -146,6 +152,20 @@
       <span><i class="dot" style="background:#8B6FB3"></i>Медийка</span>
       <span><i class="dot" style="background:var(--red)"></i>Дедлайн просрочен</span>
       <span><i class="dot" style="background:var(--amber)"></i>Дедлайн на неделе</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Бюджет по моделям</h2>
+    <p style="font-size:12.5px; color:var(--muted); margin-bottom:14px; line-height:1.6;">
+      Каждая полоса — модель, длина пропорциональна общему бюджету. Цвет показывает, куда идут деньги:
+      перформанс (продажи), медийка (охват) или маркетплейс.
+    </p>
+    <div id="budgetChart"></div>
+    <div class="legend" style="margin-top:12px;">
+      <span><i class="dot" style="background:#2C3E7A"></i>Перформанс</span>
+      <span><i class="dot" style="background:#8B6FB3"></i>Медийка</span>
+      <span><i class="dot" style="background:var(--gold)"></i>Маркетплейс</span>
     </div>
   </div>
 
@@ -312,16 +332,32 @@ function recalcOne(c){
 }
 
 function runChecks(){
-  const report = {overdue:[], missingCreative:[], weekOverload:[], mediaWithoutPerf:[], coverageGap:[], flatMismatch:[]};
+  const report = {
+    overdue:[], dueThisWeek:[], missingCreative:[], weekOverload:[],
+    mediaWithoutPerf:[], coverageGap:[], flatMismatch:[],
+    mediaBudget:{mediaSpend:0, perfSpend:0, totalSpend:0, mediaShare:0},
+    destinationGaps:[], channelGaps:[],
+  };
+  const weekEnd = new Date(TODAY); weekEnd.setDate(weekEnd.getDate()+7);
+  const weekEndIso = weekEnd.toISOString().slice(0,10);
+
   campaigns.forEach(c => {
     ["Бриф до","Креатив до","Согл. до","Загрузка до"].forEach(k => {
-      if (c[k] && c[k] < TODAY && c["Статус"] !== "Готово") {
+      if (!c[k]) return;
+      if (c[k] < TODAY && c["Статус"] !== "Готово") {
         if (!report.overdue.find(o=>o.id===c.ID)) report.overdue.push({id:c.ID, этап:k, модель:c["Модель"]});
+      } else if (c[k] >= TODAY && c[k] <= weekEndIso && c["Статус"] !== "Готово") {
+        report.dueThisWeek.push({id:c.ID, этап:k, дедлайн:c[k], модель:c["Модель"]});
       }
     });
     if (c["Статус"] !== "Готово" && c["Старт"]) {
       const days = (new Date(c["Старт"]) - new Date(TODAY)) / 86400000;
-      if (days < 7) report.missingCreative.push({id:c.ID, старт:c["Старт"], статус:c["Статус"], модель:c["Модель"]});
+      if (days < 7) {
+        // earliest still-open deadline for this campaign, shown alongside the warning
+        const nextDeadline = ["Бриф до","Креатив до","Согл. до","Загрузка до"]
+          .map(k=>c[k]).filter(d=>d && d>=TODAY).sort()[0] || null;
+        report.missingCreative.push({id:c.ID, старт:c["Старт"], статус:c["Статус"], модель:c["Модель"], ближайшийДедлайн:nextDeadline});
+      }
     }
     // does the single flat −14/−7/−3 rule (as used in the original source file) give a
     // DIFFERENT — and wrong — brief deadline compared to this campaign's real per-type rule?
@@ -331,7 +367,16 @@ function runChecks(){
         report.flatMismatch.push({id:c.ID, модель:c["Модель"], тип:c["Тип кампании"], верно:c["Бриф до"], поФлэту:flatBrief});
       }
     }
+    // budget balance: Медийка = awareness spend, everything else = performance-ish spend
+    const spend = parseFloat(c["Бюджет"]) || 0;
+    if (spend > 0) {
+      report.mediaBudget.totalSpend += spend;
+      if (c["Тип кампании"] === "Медийка") report.mediaBudget.mediaSpend += spend;
+      else report.mediaBudget.perfSpend += spend;
+    }
   });
+  report.mediaBudget.mediaShare = report.mediaBudget.totalSpend > 0
+    ? Math.round((report.mediaBudget.mediaSpend / report.mediaBudget.totalSpend) * 100) : 0;
 
   const weekCounts = {};
   campaigns.forEach(c => { if (c["Старт"]) { const w = isoWeek(c["Старт"]); (weekCounts[w] = weekCounts[w]||[]).push(c.ID); }});
@@ -346,6 +391,23 @@ function runChecks(){
     const hasSalesPoint = camps.some(c => DISTRIBUTORS.includes(c["Назначение (куда ведём)"]) || MARKETPLACES.includes(c["Назначение (куда ведём)"]));
     if (!hasSalesPoint) report.coverageGap.push({модель:model, проблема:"нет кампании на маркетплейс или дистрибьютора"});
   });
+
+  // which specific distributors/marketplaces have gone unsupported for over a month
+  [...DISTRIBUTORS, ...MARKETPLACES].forEach(dest => {
+    const camps = campaigns.filter(c => c["Назначение (куда ведём)"] === dest && c["Финиш"]);
+    if (camps.length === 0) {
+      report.destinationGaps.push({назначение:dest, статус:"нет кампаний вообще"});
+      return;
+    }
+    const lastFinish = camps.map(c=>c["Финиш"]).sort().slice(-1)[0];
+    const daysSince = Math.round((new Date(TODAY) - new Date(lastFinish)) / 86400000);
+    if (daysSince > 30) report.destinationGaps.push({назначение:dest, статус:`без поддержки ${daysSince} дн. (последняя кампания закончилась ${lastFinish})`});
+  });
+
+  // which specific channels from the matrix are sitting completely unused this month
+  const usedChannels = new Set(campaigns.map(c=>c["Канал"]));
+  CHANNEL_MATRIX.forEach(row => { if (!usedChannels.has(row.channel)) report.channelGaps.push(row.channel); });
+
   return report;
 }
 
@@ -393,6 +455,7 @@ function addCampaign(){
   const {type, forcedDest} = splitType(rawType);
   const start = document.getElementById("f-start").value;
   const end = document.getElementById("f-end").value || start;
+  const budget = document.getElementById("f-budget").value || null;
   if (!model || !start) { alert("Укажите модель и дату старта"); return; }
 
   const checkedChannels = Array.from(document.querySelectorAll(".channel-check:checked")).map(el=>el.value);
@@ -411,7 +474,7 @@ function addCampaign(){
       const c = {
         ID: nextId(), "Модель": model, "Тип кампании": type,
         "Канал": assign.channel, "Назначение (куда ведём)": assign.destination, "Формат": assign.format,
-        "Старт": start, "Финиш": end, "Статус": "Не начато",
+        "Старт": start, "Финиш": end, "Статус": "Не начато", "Бюджет": budget,
       };
       recalcOne(c);
       campaigns.push(c);
@@ -421,6 +484,7 @@ function addCampaign(){
   document.getElementById("f-model").value = "";
   document.getElementById("f-start").value = "";
   document.getElementById("f-end").value = "";
+  document.getElementById("f-budget").value = "";
   document.querySelectorAll(".channel-check, .dist-check").forEach(el=>el.checked=false);
   save(); render(); previewAssignment();
 }
@@ -508,6 +572,7 @@ function importExcel(ev){
           "Канал": channel, "Назначение (куда ведём)": destination, "Формат": format,
           "Старт": start, "Финиш": excelSerialToIso(r[col("Финиш")]) || start,
           "Статус": (col("Статус") >= 0 && r[col("Статус")]) || "Не начато",
+          "Бюджет": col("Бюджет (₸)") >= 0 ? String(r[col("Бюджет (₸)")]||"").replace(/[^\d]/g,"") || null : null,
         };
         recalcOne(c);
         imported.push(c);
@@ -554,6 +619,44 @@ function importJson(ev){
   reader.readAsText(file);
 }
 
+function renderBudgetChart(){
+  const byModel = {};
+  campaigns.forEach(c => {
+    const spend = parseFloat(c["Бюджет"]) || 0;
+    if (spend <= 0) return;
+    const model = c["Модель"];
+    byModel[model] = byModel[model] || {perf:0, media:0, marketplace:0, total:0};
+    const type = c["Тип кампании"];
+    if (type === "Медийка") byModel[model].media += spend;
+    else if (type === "Маркетплейс") byModel[model].marketplace += spend;
+    else byModel[model].perf += spend;
+    byModel[model].total += spend;
+  });
+
+  const entries = Object.entries(byModel).sort((a,b) => b[1].total - a[1].total);
+  if (entries.length === 0) {
+    document.getElementById("budgetChart").innerHTML = "<div class='empty'>Нет кампаний с указанным бюджетом.</div>";
+    return;
+  }
+  const maxTotal = Math.max(...entries.map(([,v])=>v.total));
+
+  document.getElementById("budgetChart").innerHTML = entries.map(([model, v]) => {
+    const widthPct = Math.max(4, (v.total / maxTotal) * 100);
+    const perfPct = (v.perf / v.total) * 100;
+    const mediaPct = (v.media / v.total) * 100;
+    const mpPct = (v.marketplace / v.total) * 100;
+    return `<div class="budget-row">
+      <div class="budget-label">${model}</div>
+      <div class="budget-bar-wrap" style="width:${widthPct}%">
+        ${v.perf>0?`<div class="budget-seg" style="width:${perfPct}%;background:#2C3E7A" title="Перформанс: ${v.perf.toLocaleString('ru-RU')} ₸"></div>`:''}
+        ${v.media>0?`<div class="budget-seg" style="width:${mediaPct}%;background:#8B6FB3" title="Медийка: ${v.media.toLocaleString('ru-RU')} ₸"></div>`:''}
+        ${v.marketplace>0?`<div class="budget-seg" style="width:${mpPct}%;background:var(--gold)" title="Маркетплейс: ${v.marketplace.toLocaleString('ru-RU')} ₸"></div>`:''}
+      </div>
+      <div class="budget-total">${v.total.toLocaleString("ru-RU")} ₸</div>
+    </div>`;
+  }).join("");
+}
+
 function showDetail(key){
   const report = window.lastReport;
   const panel = document.getElementById("detailPanel");
@@ -573,6 +676,20 @@ function showDetail(key){
   } else if (key === "coverageGap") {
     title = "Модели без точки продаж (маркетплейс/дистрибьютор)";
     rows = report.coverageGap.map(g=>`<li><span class="tag mid">нет покрытия</span> <span><b>${g.модель}</b> — есть реклама, но нет пути купить через партнёра</span></li>`).join("");
+  } else if (key === "dueThisWeek") {
+    title = "Дедлайны в ближайшие 7 дней";
+    rows = report.dueThisWeek.map(d=>`<li><span class="tag mid">${fmtDate(d.дедлайн)}</span> <span><b>${d.id}</b> — модель ${d.модель}, этап «${d.этап}»</span></li>`).join("");
+  } else if (key === "mediaBudget") {
+    title = "Баланс бюджета: перформанс vs медийка";
+    const b = report.mediaBudget;
+    rows = `<li><span class="tag ${b.mediaShare>40?'high':'mid'}">${b.mediaShare}%</span> <span>бюджета в медийке (${b.mediaSpend.toLocaleString("ru-RU")} ₸ из ${b.totalSpend.toLocaleString("ru-RU")} ₸ общего)</span></li>
+      <li><span class="tag mid">${100-b.mediaShare}%</span> <span>в перформансе (${b.perfSpend.toLocaleString("ru-RU")} ₸)</span></li>
+      ${b.mediaShare>40 ? `<li><span class="tag high">Риск</span> <span>Больше 40% в медийке — многовато охвата без прямой отдачи в продажи, стоит проверить баланс.</span></li>` : ""}`;
+  } else if (key === "launchesThisWeek") {
+    title = "Запуски на этой неделе";
+    const started = campaigns.filter(c => c["Старт"] && isoWeek(c["Старт"]) === isoWeek(TODAY));
+    rows = started.map(c=>`<li><span class="tag mid">${fmtDate(c["Старт"])}</span> <span><b>${c.ID}</b> — ${c["Модель"]}, ${c["Тип кампании"]}, канал ${c["Канал"]}</span></li>`).join("");
+    if (started.length > 4) rows = `<li><span class="tag high">Перегруз</span> <span>Больше 4 запусков на одну неделю — креативная студия может не успеть</span></li>` + rows;
   }
   panel.style.display = "block";
   panel.innerHTML = `<h2>${title} <span style="cursor:pointer;color:var(--muted);font-weight:400" onclick="document.getElementById('detailPanel').style.display='none'">✕ закрыть</span></h2>
@@ -589,11 +706,15 @@ function render(){
   document.getElementById("subline").textContent = `Сегодня ${fmtDate(TODAY)} · Неделя №${weekNum(todayWeek)} · ${campaigns.length} активностей в плане`;
 
   const overdueSet = new Set(report.overdue.map(o=>o.id));
+  const launchesThisWeek = campaigns.filter(c => c["Старт"] && isoWeek(c["Старт"]) === todayWeek).length;
   document.getElementById("summary").innerHTML = [
     {n:campaigns.length, l:"активностей всего", key:"total"},
-    {n:overdueSet.size, l:"с просрочкой", warn:overdueSet.size>0, key:"overdue"},
-    {n:report.missingCreative.length, l:"не готовы к запуску", warn:report.missingCreative.length>0, key:"missingCreative"},
+    {n:overdueSet.size, l:"просроченные дедлайны", warn:overdueSet.size>0, key:"overdue"},
+    {n:report.dueThisWeek.length, l:"дедлайны на этой неделе", warn:report.dueThisWeek.length>0, key:"dueThisWeek"},
+    {n:report.missingCreative.length, l:"кампании без креатива", warn:report.missingCreative.length>0, key:"missingCreative"},
     {n:report.coverageGap.length, l:"моделей без покрытия", warn:report.coverageGap.length>0, key:"coverageGap"},
+    {n:report.mediaBudget.mediaShare + "%", l:"баланс перформанс/медийка", warn:report.mediaBudget.mediaShare>40, key:"mediaBudget"},
+    {n:launchesThisWeek, l:"запусков на неделю", warn:launchesThisWeek>4, key:"launchesThisWeek"},
   ].map(k=>`<div class="kpi ${k.warn?'warn':''}" ${k.key?`onclick="showDetail('${k.key}')" style="cursor:pointer"`:''}>
       <div class="n">${k.n}</div><div class="l">${k.l}${k.key?' ↓':''}</div></div>`).join("");
 
@@ -647,15 +768,22 @@ function render(){
     grows += `<tr><td style="white-space:nowrap">${c.ID} · ${c["Модель"]}</td>${cells}</tr>`;
   });
   document.getElementById("gantt").innerHTML = thead + grows;
+  renderBudgetChart();
 
   // digest
   let d = `<b>🔥 Что горит</b>\n`;
   d += report.overdue.length ? report.overdue.map(o=>`— ${o.id} (${o.модель}) — просрочен этап «${o.этап}»`).join("\n") : "— просрочек нет";
   d += `\n\n<b>📋 На этой неделе</b>\n`;
-  d += report.missingCreative.length ? report.missingCreative.slice(0,8).map(m=>`— ${m.id} (${m.модель}) — старт ${m.старт}, статус «${m.статус}»`).join("\n") : "— срочных задач нет";
+  d += report.missingCreative.length
+    ? report.missingCreative.slice(0,8).map(m=>`— ${m.id} (${m.модель}) — старт ${fmtDate(m.старт)}, статус «${m.статус}»`).join("\n")
+    : "— срочных задач нет";
   d += `\n\n<b>🕳️ Где дыры</b>\n`;
-  let gaps = [...report.mediaWithoutPerf.map(g=>`— ${g.модель}: медийка (${g.кампании.join(", ")}) без перформанс-поддержки`),
-              ...report.coverageGap.map(g=>`— ${g.модель}: ${g.проблема}`)];
+  let gaps = [
+    ...report.mediaWithoutPerf.map(g=>`— ${g.модель}: медийка (${g.кампании.join(", ")}) без перформанс-поддержки`),
+    ...report.coverageGap.map(g=>`— ${g.модель}: ${g.проблема}`),
+    ...report.destinationGaps.map(g=>`— ${g.назначение}: ${g.статус}`),
+  ];
+  if (report.channelGaps.length) gaps.push(`— каналы без единой кампании в этом месяце: ${report.channelGaps.join(", ")}`);
   d += gaps.length ? gaps.join("\n") : "— дыр не найдено";
   document.getElementById("digest").innerHTML = d;
 
