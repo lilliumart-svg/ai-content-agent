@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Content Plan — рабочее приложение</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1B2559; --gold:#C9973E; --green:#1D8A5C; --red:#C24545; --amber:#D9A441;
+    --bg:#F7F8FB; --line:#E5E7EB; --muted:#6B7280;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Inter',sans-serif; background:var(--bg); color:#1F2937;}
+  .display{font-family:'Space Grotesk',sans-serif;}
+  .wrap{max-width:1320px; margin:0 auto; padding:36px 24px;}
+  header{margin-bottom:24px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px;}
+  .eyebrow{font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); font-weight:600; margin-bottom:6px;}
+  h1{font-size:24px; color:var(--navy); font-weight:700;}
+  .sub{font-size:12px; color:var(--muted); margin-top:4px;}
+  .savebadge{font-size:11px; color:var(--green); display:flex; align-items:center; gap:5px;}
+
+  .summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:22px;}
+  .kpi{background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
+  .kpi .n{font-size:20px; font-weight:700; color:var(--navy); font-family:'Space Grotesk',sans-serif;}
+  .kpi .l{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;}
+  .kpi.warn .n{color:var(--red);}
+
+  .panel{background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:22px; overflow-x:auto;}
+  .panel h2{font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--gold); font-weight:600; margin-bottom:14px;}
+
+  .form-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; align-items:end;}
+  label{font-size:11px; color:var(--muted); display:block; margin-bottom:4px;}
+  input, select{width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:13px; font-family:inherit;}
+  button{cursor:pointer; border:none; font-family:inherit;}
+  .btn-primary{background:var(--navy); color:#fff; padding:9px 18px; border-radius:8px; font-size:13px; font-weight:600;}
+  .btn-ghost{background:#fff; border:1px solid var(--line); color:var(--muted); padding:8px 14px; border-radius:8px; font-size:12px;}
+  .assign-preview{grid-column:1/-1; font-size:12px; color:var(--muted); background:var(--bg); border-radius:8px; padding:10px 12px; display:none;}
+  .assign-preview b{color:var(--navy);}
+
+  table{border-collapse:collapse; width:100%; font-size:12px;}
+  th{padding:7px 8px; text-align:left; font-weight:600; color:var(--muted); border-bottom:1px solid var(--line); white-space:nowrap;}
+  td{padding:7px 8px; border-bottom:1px solid #F3F4F6; white-space:nowrap;}
+  .badge{font-size:10px; font-weight:600; padding:2px 8px; border-radius:100px;}
+  .badge.ok{background:#E4F4EC; color:var(--green);}
+  .badge.warn{background:#FDF3D9; color:#946E1F;}
+  .badge.late{background:#FDE2E2; color:var(--red);}
+  select.status-select{font-size:11px; padding:4px 6px;}
+  .del-btn{color:var(--red); font-size:11px; background:none;}
+
+  table.gantt th{text-align:center;}
+  .cell{height:24px; position:relative; padding:0 !important;}
+  .bar{position:absolute; top:4px; bottom:4px; left:2px; right:2px; border-radius:4px;}
+  .bar.perf{background:#2C3E7A;} .bar.media{background:#8B6FB3;} .bar.done{opacity:.35;}
+  .marker{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:7px; height:7px; border-radius:2px;}
+  .marker.overdue{background:var(--red);} .marker.soon{background:var(--amber);}
+  .today-col{background:#FFFBF2;}
+
+  .digest{white-space:pre-wrap; font-size:13px; line-height:1.7;}
+  .digest b{color:var(--navy);}
+  .conflict-list{list-style:none;}
+  .conflict-list li{padding:8px 0; border-bottom:1px solid #F3F4F6; font-size:12.5px; display:flex; gap:10px;}
+  .conflict-list li:last-child{border-bottom:none;}
+  .tag{font-size:10px; font-weight:600; padding:2px 7px; border-radius:100px; white-space:nowrap;}
+  .tag.high{background:#FDE2E2; color:var(--red);}
+  .tag.mid{background:#FDF3D9; color:#946E1F;}
+  .empty{color:var(--muted); font-size:12px;}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--muted); margin-top:10px;}
+  .dot{width:8px; height:8px; border-radius:2px; display:inline-block; margin-right:4px;}
+</style>
+</head>
+<body>
+<script type="application/json" id="seed-data">[{"ID": "C-01", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Промо-запуск", "Канал": "Performance Max", "Назначение (куда ведём)": "samsung.kz", "Формат": "Display", "Старт": "2026-07-06", "Финиш": "2026-07-26", "Статус": "Готово"}, {"ID": "C-02", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Промо-запуск", "Канал": "Google Search", "Назначение (куда ведём)": "samsung.kz", "Формат": "Search RSA", "Старт": "2026-07-06", "Финиш": "2026-07-26", "Статус": "Готово"}, {"ID": "C-03", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Маркетплейс", "Канал": "Kaspi Ads", "Назначение (куда ведём)": "Kaspi.kz", "Формат": "Banner", "Старт": "2026-07-06", "Финиш": "2026-07-31", "Статус": "В работе"}, {"ID": "C-04", "Модель": "RB37A5411EL/WT", "Тип кампании": "Retail support", "Канал": "Meta", "Назначение (куда ведём)": "Technodom", "Формат": "Feed Square", "Старт": "2026-07-13", "Финиш": "2026-07-27", "Статус": "В работе"}, {"ID": "C-05", "Модель": "RB37A5411EL/WT", "Тип кампании": "Retail support", "Канал": "Meta", "Назначение (куда ведём)": "Sulpak", "Формат": "Feed Portrait", "Старт": "2026-07-13", "Финиш": "2026-07-27", "Статус": "В работе"}, {"ID": "C-06", "Модель": "RB53DG703EB1WT", "Тип кампании": "Медийка", "Канал": "YouTube", "Назначение (куда ведём)": "samsung.kz", "Формат": "Video 16:9", "Старт": "2026-07-13", "Финиш": "2026-08-03", "Статус": "Не начато"}, {"ID": "C-07", "Модель": "NV75T9979CD/WT", "Тип кампании": "Промо-запуск", "Канал": "Performance Max", "Назначение (куда ведём)": "samsung.kz", "Формат": "Display", "Старт": "2026-07-20", "Финиш": "2026-08-10", "Статус": "Не начато"}, {"ID": "C-08", "Модель": "NV75T9979CD/WT", "Тип кампании": "Маркетплейс", "Канал": "Ozon Ads", "Назначение (куда ведём)": "Ozon", "Формат": "Banner", "Старт": "2026-07-20", "Финиш": "2026-08-10", "Статус": "Не начато"}, {"ID": "C-09", "Модель": "Bespoke line", "Тип кампании": "Медийка", "Канал": "Meta", "Назначение (куда ведём)": "samsung.kz", "Формат": "Stories/Reels", "Старт": "2026-07-20", "Финиш": "2026-08-17", "Статус": "Не начато"}, {"ID": "C-10", "Модель": "WW65AK4S21CELT", "Тип кампании": "Always-on", "Канал": "Google Search", "Назначение (куда ведём)": "samsung.kz", "Формат": "Search RSA", "Старт": "2026-07-27", "Финиш": "2026-08-24", "Статус": "Не начато"}, {"ID": "C-11", "Модель": "RB37A5411EL/WT", "Тип кампании": "Retail support", "Канал": "Display", "Назначение (куда ведём)": "Mechta", "Формат": "Display", "Старт": "2026-07-27", "Финиш": "2026-08-10", "Статус": "Не начато"}, {"ID": "C-12", "Модель": "WW80AK6L28BBLT", "Тип кампании": "Always-on", "Канал": "TikTok In Feed", "Назначение (куда ведём)": "samsung.kz", "Формат": "Stories/Reels", "Старт": "2026-07-27", "Финиш": "2026-08-24", "Статус": "Не начато"}]</script>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Digital Content Plan — рабочее приложение</p>
+      <h1 class="display">Веду план за менеджера</h1>
+      <p class="sub" id="subline"></p>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <span class="savebadge" id="savebadge" style="visibility:hidden">💾 сохранено локально</span>
+      <button class="btn-ghost" onclick="exportJson()">Экспорт JSON</button>
+      <button class="btn-ghost" onclick="document.getElementById('importFile').click()">Импорт JSON</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJson(event)">
+    </div>
+  </header>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="panel">
+    <h2>Добавить кампанию (менеджер вводит только это)</h2>
+    <div class="form-grid" id="addForm">
+      <div><label>Модель</label><input id="f-model" placeholder="WW80AK6L28BBLT"></div>
+      <div><label>Тип кампании</label>
+        <select id="f-type">
+          <option>Промо-запуск</option><option>Always-on</option><option>Медийка</option>
+          <option>Retail support</option><option>Маркетплейс</option>
+        </select>
+      </div>
+      <div><label>Дата старта</label><input id="f-start" type="date"></div>
+      <div><label>Дата финиша</label><input id="f-end" type="date"></div>
+      <div><button class="btn-primary" onclick="addCampaign()">+ Добавить и назначить</button></div>
+      <div class="assign-preview" id="assignPreview"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Полный контент-план</h2>
+    <table id="planTable"></table>
+  </div>
+
+  <div class="panel">
+    <h2>Календарь по неделям</h2>
+    <table class="gantt" id="gantt"></table>
+    <div class="legend">
+      <span><i class="dot" style="background:#2C3E7A"></i>Перформанс</span>
+      <span><i class="dot" style="background:#8B6FB3"></i>Медийка</span>
+      <span><i class="dot" style="background:var(--red)"></i>Дедлайн просрочен</span>
+      <span><i class="dot" style="background:var(--amber)"></i>Дедлайн на неделе</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Недельный дайджест</h2>
+    <div class="digest" id="digest"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Отчёт проверок</h2>
+    <ul class="conflict-list" id="conflicts"></ul>
+  </div>
+</div>
+
+<script>
+/* ============ DATA-DRIVEN BUSINESS RULES (from the source Excel, not hardcoded guesses) ============ */
+const TODAY = "2026-07-27"; // swap for a live date in production
+
+const DEADLINE_RULES = {
+  "Промо-запуск": {brief:14, creative:7, approval:3, upload:1},
+  "Always-on":    {brief:10, creative:5, approval:2, upload:1},
+  "Медийка":      {brief:21, creative:10, approval:5, upload:2},
+  "Retail support":{brief:14, creative:7, approval:4, upload:2},
+  "Маркетплейс":  {brief:10, creative:5, approval:3, upload:1},
+};
+
+const CHANNEL_MATRIX = [
+  {channel:"Google Search",   type:"Performance",         destinations:["samsung.kz"], formats:"Search RSA (тексты)"},
+  {channel:"Performance Max", type:"Performance",         destinations:["samsung.kz"], formats:"Display 1200×628 · Square 1080×1080 · Video"},
+  {channel:"Meta",            type:"Performance / Медийка",destinations:["samsung.kz","Technodom","Sulpak","Mechta","Evrika"], formats:"Feed Square · Feed Portrait · Stories"},
+  {channel:"TikTok In Feed",  type:"Медийка",              destinations:["samsung.kz"], formats:"Stories/Reels 1080×1920"},
+  {channel:"YouTube",         type:"Медийка",              destinations:["samsung.kz"], formats:"Video 1920×1080 · Bumper 6 сек"},
+  {channel:"Display / GDN",   type:"Медийка",              destinations:["samsung.kz","дистрибьюторы"], formats:"Display 1200×628 · набор баннеров"},
+  {channel:"Kaspi Ads",       type:"Маркетплейс",          destinations:["Kaspi.kz"], formats:"Banner + карточка товара"},
+  {channel:"Ozon Ads",        type:"Маркетплейс",          destinations:["Ozon"], formats:"Banner + карточка товара"},
+];
+
+const DISTRIBUTORS = ["Technodom", "Sulpak", "Mechta", "Evrika"];
+const MARKETPLACES = ["Kaspi.kz", "Ozon"];
+
+// which matrix rows are eligible for each campaign TYPE, and how to pick a destination
+const TYPE_TO_CHANNELS = {
+  "Промо-запуск":   {channels:["Google Search","Performance Max"], destPool:["samsung.kz"]},
+  "Always-on":      {channels:["Google Search","Performance Max"], destPool:["samsung.kz"]},
+  "Retail support": {channels:["Meta","Display / GDN"], destPool:DISTRIBUTORS},
+  "Маркетплейс":    {channels:["Kaspi Ads","Ozon Ads"], destPool:MARKETPLACES},
+  "Медийка":        {channels:["YouTube","TikTok In Feed","Display / GDN"], destPool:["samsung.kz"]},
+};
+
+/* ============ SEED DATA — the 12 campaigns already in the master plan ============ */
+let campaigns = JSON.parse(document.getElementById("seed-data").textContent);
+let rrCounters = {}; // round-robin position per type, so repeated adds spread across channels/destinations
+
+/* ============ CORE LOGIC (mirrors engine.py) ============ */
+function prevBusinessDay(d){
+  const dt = new Date(d + "T00:00:00");
+  while (dt.getDay() === 0 || dt.getDay() === 6) dt.setDate(dt.getDate() - 1);
+  return dt.toISOString().slice(0,10);
+}
+function addDays(d, n){
+  const dt = new Date(d + "T00:00:00");
+  dt.setDate(dt.getDate() - n);
+  return dt.toISOString().slice(0,10);
+}
+function isoWeek(dateStr){
+  const d = new Date(dateStr + "T00:00:00");
+  const target = new Date(d.valueOf());
+  const dayNr = (d.getDay() + 6) % 7;
+  target.setDate(target.getDate() - dayNr + 3);
+  const firstThursday = new Date(target.getFullYear(), 0, 4);
+  const diff = (target - firstThursday) / 86400000;
+  const week = 1 + Math.round(diff / 7);
+  return `${target.getFullYear()}-W${String(week).padStart(2,"0")}`;
+}
+
+function assignChannel(type){
+  const rule = TYPE_TO_CHANNELS[type];
+  if (!rule) return null;
+  rrCounters[type] = rrCounters[type] || {c:0, d:0};
+  const channelName = rule.channels[rrCounters[type].c % rule.channels.length];
+  const destination = rule.destPool[rrCounters[type].d % rule.destPool.length];
+  rrCounters[type].c++; rrCounters[type].d++;
+  const matrixRow = CHANNEL_MATRIX.find(m => m.channel === channelName);
+  return {channel: channelName, destination, format: matrixRow ? matrixRow.formats : ""};
+}
+
+function recalcOne(c){
+  const rule = DEADLINE_RULES[c["Тип кампании"]];
+  if (!rule || !c["Старт"]) return c;
+  const isDistributor = DISTRIBUTORS.includes(c["Назначение (куда ведём)"]);
+  const approvalOffset = rule.approval + (isDistributor ? 1 : 0);
+  c["Бриф до"] = prevBusinessDay(addDays(c["Старт"], rule.brief));
+  c["Креатив до"] = prevBusinessDay(addDays(c["Старт"], rule.creative));
+  c["Согл. до"] = prevBusinessDay(addDays(c["Старт"], approvalOffset));
+  c["Загрузка до"] = prevBusinessDay(addDays(c["Старт"], rule.upload));
+  return c;
+}
+
+function runChecks(){
+  const report = {overdue:[], missingCreative:[], weekOverload:[], mediaWithoutPerf:[], coverageGap:[]};
+  campaigns.forEach(c => {
+    ["Бриф до","Креатив до","Согл. до","Загрузка до"].forEach(k => {
+      if (c[k] && c[k] < TODAY && c["Статус"] !== "Готово") {
+        if (!report.overdue.find(o=>o.id===c.ID)) report.overdue.push({id:c.ID, этап:k, модель:c["Модель"]});
+      }
+    });
+    if (c["Статус"] !== "Готово" && c["Старт"]) {
+      const days = (new Date(c["Старт"]) - new Date(TODAY)) / 86400000;
+      if (days < 7) report.missingCreative.push({id:c.ID, старт:c["Старт"], статус:c["Статус"], модель:c["Модель"]});
+    }
+  });
+
+  const weekCounts = {};
+  campaigns.forEach(c => { if (c["Старт"]) { const w = isoWeek(c["Старт"]); (weekCounts[w] = weekCounts[w]||[]).push(c.ID); }});
+  Object.entries(weekCounts).forEach(([w, ids]) => { if (ids.length > 4) report.weekOverload.push({неделя:w, кампании:ids}); });
+
+  const byModel = {};
+  campaigns.forEach(c => { (byModel[c["Модель"]] = byModel[c["Модель"]]||[]).push(c); });
+  Object.entries(byModel).forEach(([model, camps]) => {
+    const hasPerf = camps.some(c => c["Тип кампании"] !== "Медийка");
+    const hasMedia = camps.some(c => c["Тип кампании"] === "Медийка");
+    if (hasMedia && !hasPerf) report.mediaWithoutPerf.push({модель:model, кампании:camps.filter(c=>c["Тип кампании"]==="Медийка").map(c=>c.ID)});
+    const hasSalesPoint = camps.some(c => DISTRIBUTORS.includes(c["Назначение (куда ведём)"]) || MARKETPLACES.includes(c["Назначение (куда ведём)"]));
+    if (!hasSalesPoint) report.coverageGap.push({модель:model, проблема:"нет кампании на маркетплейс или дистрибьютора"});
+  });
+  return report;
+}
+
+/* ============ UI ============ */
+function nextId(){
+  const nums = campaigns.map(c => parseInt((c.ID||"C-0").split("-")[1])||0);
+  return "C-" + String(Math.max(0,...nums)+1).padStart(2,"0");
+}
+
+function previewAssignment(){
+  const type = document.getElementById("f-type").value;
+  const assign = assignChannelPreview(type);
+  const el = document.getElementById("assignPreview");
+  el.style.display = "block";
+  el.innerHTML = `Агент назначит: <b>${assign.channel}</b> → <b>${assign.destination}</b> · формат: ${assign.format}`;
+}
+function assignChannelPreview(type){
+  // peek at next assignment without consuming the round-robin counter
+  const rule = TYPE_TO_CHANNELS[type];
+  const rr = rrCounters[type] || {c:0,d:0};
+  const channelName = rule.channels[rr.c % rule.channels.length];
+  const destination = rule.destPool[rr.d % rule.destPool.length];
+  const matrixRow = CHANNEL_MATRIX.find(m => m.channel === channelName);
+  return {channel:channelName, destination, format: matrixRow ? matrixRow.formats : ""};
+}
+
+function addCampaign(){
+  const model = document.getElementById("f-model").value.trim();
+  const type = document.getElementById("f-type").value;
+  const start = document.getElementById("f-start").value;
+  const end = document.getElementById("f-end").value || start;
+  if (!model || !start) { alert("Укажите модель и дату старта"); return; }
+  const assign = assignChannel(type);
+  const c = {
+    ID: nextId(), "Модель": model, "Тип кампании": type,
+    "Канал": assign.channel, "Назначение (куда ведём)": assign.destination, "Формат": assign.format,
+    "Старт": start, "Финиш": end, "Статус": "Не начато",
+  };
+  recalcOne(c);
+  campaigns.push(c);
+  document.getElementById("f-model").value = "";
+  document.getElementById("f-start").value = "";
+  document.getElementById("f-end").value = "";
+  document.getElementById("assignPreview").style.display = "none";
+  save(); render();
+}
+
+function updateStatus(id, val){
+  const c = campaigns.find(c=>c.ID===id); if (c) c["Статус"] = val;
+  save(); render();
+}
+function deleteCampaign(id){
+  campaigns = campaigns.filter(c=>c.ID!==id);
+  save(); render();
+}
+
+function save(){
+  try {
+    localStorage.setItem("scp_campaigns", JSON.stringify(campaigns));
+    const b = document.getElementById("savebadge");
+    b.style.visibility = "visible";
+    setTimeout(()=>b.style.visibility="hidden", 1500);
+  } catch(e) { /* file:// origin or private mode — silently skip, export/import still works */ }
+}
+function tryLoad(){
+  try {
+    const raw = localStorage.getItem("scp_campaigns");
+    if (raw) campaigns = JSON.parse(raw);
+  } catch(e) {}
+}
+function exportJson(){
+  const blob = new Blob([JSON.stringify(campaigns, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "content-plan-backup.json";
+  a.click();
+}
+function importJson(ev){
+  const file = ev.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { campaigns = JSON.parse(e.target.result); save(); render(); };
+  reader.readAsText(file);
+}
+
+function render(){
+  campaigns.forEach(recalcOne);
+  const report = runChecks();
+  const todayWeek = isoWeek(TODAY);
+
+  document.getElementById("subline").textContent = `Сегодня ${TODAY} · ${campaigns.length} активностей в плане`;
+
+  const overdueSet = new Set(report.overdue.map(o=>o.id));
+  document.getElementById("summary").innerHTML = [
+    {n:campaigns.length, l:"активностей всего"},
+    {n:overdueSet.size, l:"с просрочкой", warn:overdueSet.size>0},
+    {n:report.missingCreative.length, l:"старт < 7дн без креатива", warn:report.missingCreative.length>0},
+    {n:report.coverageGap.length, l:"моделей без покрытия", warn:report.coverageGap.length>0},
+  ].map(k=>`<div class="kpi ${k.warn?'warn':''}"><div class="n">${k.n}</div><div class="l">${k.l}</div></div>`).join("");
+
+  // plan table
+  let rows = `<tr><th>ID</th><th>Модель</th><th>Тип</th><th>Канал</th><th>Назначение</th><th>Старт</th><th>Финиш</th>
+    <th>Бриф до</th><th>Креатив до</th><th>Согл. до</th><th>Статус</th><th></th></tr>`;
+  campaigns.forEach(c => {
+    const late = overdueSet.has(c.ID);
+    rows += `<tr>
+      <td>${c.ID}</td><td>${c["Модель"]}</td><td>${c["Тип кампании"]}</td><td>${c["Канал"]||"—"}</td>
+      <td>${c["Назначение (куда ведём)"]||"—"}</td><td>${c["Старт"]||"—"}</td><td>${c["Финиш"]||"—"}</td>
+      <td>${c["Бриф до"]||"—"}</td><td>${c["Креатив до"]||"—"}</td><td>${c["Согл. до"]||"—"}</td>
+      <td><select class="status-select" onchange="updateStatus('${c.ID}', this.value)">
+        ${["Не начато","В работе","Готово"].map(s=>`<option ${c["Статус"]===s?"selected":""}>${s}</option>`).join("")}
+      </select> ${late?'<span class="badge late">риск</span>':''}</td>
+      <td><button class="del-btn" onclick="deleteCampaign('${c.ID}')">удалить</button></td>
+    </tr>`;
+  });
+  document.getElementById("planTable").innerHTML = rows;
+
+  // gantt
+  const weeksSet = new Set([todayWeek]);
+  campaigns.forEach(c => { if(c["Старт"]) weeksSet.add(isoWeek(c["Старт"])); if(c["Финиш"]) weeksSet.add(isoWeek(c["Финиш"])); });
+  const sorted = Array.from(weeksSet).sort();
+  let [fy,fw] = sorted[0].split("-W").map(Number); let [ly,lw] = sorted[sorted.length-1].split("-W").map(Number);
+  const weeks = []; let y=fy,w=fw;
+  while (y<ly || (y===ly && w<=lw)) { weeks.push(`${y}-W${String(w).padStart(2,"0")}`); w++; if(w>52){w=1;y++;} }
+
+  let thead = "<tr><th style='text-align:left'>Кампания</th>" + weeks.map(w=>`<th>${w.split("-W")[1]}</th>`).join("") + "</tr>";
+  let grows = "";
+  campaigns.forEach(c => {
+    const sw = c["Старт"] ? isoWeek(c["Старт"]) : null, ew = c["Финиш"] ? isoWeek(c["Финиш"]) : sw;
+    const isMedia = c["Тип кампании"]==="Медийка", isDone = c["Статус"]==="Готово";
+    let cells = "";
+    weeks.forEach(wk => {
+      const inRange = sw && ew && wk>=sw && wk<=ew;
+      let marker = "";
+      ["Бриф до","Креатив до","Согл. до","Загрузка до"].forEach(k=>{
+        if (c[k] && isoWeek(c[k])===wk) {
+          const isOverdue = overdueSet.has(c.ID) && c[k] < TODAY;
+          marker += `<div class="marker ${isOverdue?'overdue':(c[k]>=TODAY?'soon':'')}" title="${k}: ${c[k]}"></div>`;
+        }
+      });
+      cells += `<td class="cell ${wk===todayWeek?'today-col':''}">${inRange?`<div class="bar ${isMedia?'media':'perf'} ${isDone?'done':''}" title="${c.ID}"></div>`:''}${marker}</td>`;
+    });
+    grows += `<tr><td style="white-space:nowrap">${c.ID} · ${c["Модель"]}</td>${cells}</tr>`;
+  });
+  document.getElementById("gantt").innerHTML = thead + grows;
+
+  // digest
+  let d = `<b>🔥 Что горит</b>\n`;
+  d += report.overdue.length ? report.overdue.map(o=>`— ${o.id} (${o.модель}) — просрочен этап «${o.этап}»`).join("\n") : "— просрочек нет";
+  d += `\n\n<b>📋 На этой неделе</b>\n`;
+  d += report.missingCreative.length ? report.missingCreative.slice(0,8).map(m=>`— ${m.id} (${m.модель}) — старт ${m.старт}, статус «${m.статус}»`).join("\n") : "— срочных задач нет";
+  d += `\n\n<b>🕳️ Где дыры</b>\n`;
+  let gaps = [...report.mediaWithoutPerf.map(g=>`— ${g.модель}: медийка (${g.кампании.join(", ")}) без перформанс-поддержки`),
+              ...report.coverageGap.map(g=>`— ${g.модель}: ${g.проблема}`)];
+  d += gaps.length ? gaps.join("\n") : "— дыр не найдено";
+  document.getElementById("digest").innerHTML = d;
+
+  // conflicts
+  let html = "";
+  report.overdue.forEach(o => html += `<li><span class="tag high">Просрочка</span> <span>${o.id} (${o.модель}) — этап «${o.этап}»</span></li>`);
+  report.mediaWithoutPerf.forEach(g => html += `<li><span class="tag mid">Медийка без перформанса</span> <span>${g.модель}: ${g.кампании.join(", ")}</span></li>`);
+  report.coverageGap.forEach(g => html += `<li><span class="tag mid">Нет покрытия</span> <span>${g.модель}: ${g.проблема}</span></li>`);
+  report.weekOverload.forEach(g => html += `<li><span class="tag mid">Перегруз недели</span> <span>${g.неделя}: ${g.кампании.join(", ")}</span></li>`);
+  document.getElementById("conflicts").innerHTML = html || "<div class='empty'>Конфликтов не найдено.</div>";
+}
+
+document.getElementById("f-type").addEventListener("change", previewAssignment);
+tryLoad();
+previewAssignment();
+render();
+</script>
+</body>
+</html>
