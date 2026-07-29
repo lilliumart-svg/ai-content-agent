@@ -6,6 +6,7 @@
 <title>Digital Content Plan — рабочее приложение</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --navy:#1B2559; --gold:#C9973E; --green:#1D8A5C; --red:#C24545; --amber:#D9A441;
@@ -38,6 +39,7 @@
   .btn-ghost{background:#fff; border:1px solid var(--line); color:var(--muted); padding:8px 14px; border-radius:8px; font-size:12px;}
   .assign-preview{grid-column:1/-1; font-size:12px; color:var(--muted); background:var(--bg); border-radius:8px; padding:10px 12px; display:none;}
   .assign-preview b{color:var(--navy);}
+  .dist-box{display:flex;align-items:center;gap:6px;background:#F3F4F6;border:1px solid var(--line);padding:6px 10px;border-radius:8px;cursor:pointer;color:#4B5563;}
 
   table{border-collapse:collapse; width:100%; font-size:12px;}
   th{padding:7px 8px; text-align:left; font-weight:600; color:var(--muted); border-bottom:1px solid var(--line); white-space:nowrap;}
@@ -47,6 +49,7 @@
   .badge.warn{background:#FDF3D9; color:#946E1F;}
   .badge.late{background:#FDE2E2; color:var(--red);}
   select.status-select{font-size:11px; padding:4px 6px;}
+  tr.row-done{background:#F0FAF4;} tr.row-progress{background:#FFFCF2;}
   .del-btn{color:var(--red); font-size:11px; background:none;}
 
   table.gantt th{text-align:center;}
@@ -76,11 +79,13 @@
   <header>
     <div>
       <p class="eyebrow">Digital Content Plan — рабочее приложение</p>
-      <h1 class="display">Веду план за менеджера</h1>
+      <h1 class="display">Автоматизация контент-плана</h1>
       <p class="sub" id="subline"></p>
     </div>
     <div style="display:flex; gap:8px; align-items:center;">
       <span class="savebadge" id="savebadge" style="visibility:hidden">💾 сохранено локально</span>
+      <button class="btn-primary" onclick="document.getElementById('excelFile').click()">📄 Загрузить Excel (новый месяц)</button>
+      <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none" onchange="importExcel(event)">
       <button class="btn-ghost" onclick="exportJson()">Экспорт JSON</button>
       <button class="btn-ghost" onclick="document.getElementById('importFile').click()">Импорт JSON</button>
       <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJson(event)">
@@ -88,9 +93,17 @@
   </header>
 
   <div class="summary" id="summary"></div>
+  <div class="panel" id="detailPanel" style="display:none;"></div>
 
   <div class="panel">
     <h2>Добавить кампанию (менеджер вводит только это)</h2>
+    <p style="font-size:12.5px; color:var(--muted); margin-bottom:14px; line-height:1.6;">
+      <b style="color:var(--navy)">Как работает подбор канала:</b> у каждого типа кампании есть список
+      допустимых каналов и точек назначения (из вкладки «Каналы и назначения»). Если ничего не отмечать
+      ниже — агент возьмёт следующий канал/партнёра по очереди сам (чтобы за месяц покрытие не проседало
+      на одном дистрибьюторе или маркетплейсе). Если отметить один или несколько каналов галочками —
+      создастся отдельная кампания на каждый выбранный канал, с этими же моделью и датами.
+    </p>
     <div class="form-grid" id="addForm">
       <div><label>Модель</label><input id="f-model" placeholder="WW80AK6L28BBLT"></div>
       <div><label>Тип кампании</label>
@@ -102,17 +115,31 @@
       <div><label>Дата старта</label><input id="f-start" type="date"></div>
       <div><label>Дата финиша</label><input id="f-end" type="date"></div>
       <div><button class="btn-primary" onclick="addCampaign()">+ Добавить и назначить</button></div>
-      <div class="assign-preview" id="assignPreview"></div>
+      <div class="assign-preview" id="assignPreview" style="grid-column:1/-1;"></div>
+      <div id="channelOptions" style="grid-column:1/-1; display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px;"></div>
+      <div id="distributorOptions" style="grid-column:1/-1; display:flex; gap:10px; flex-wrap:wrap; font-size:12.5px;"></div>
     </div>
   </div>
 
   <div class="panel">
     <h2>Полный контент-план</h2>
+    <div class="legend" style="margin-bottom:10px;">
+      <span><i class="dot" style="background:#F0FAF4;border:1px solid var(--green)"></i>Готово</span>
+      <span><i class="dot" style="background:#FFFCF2;border:1px solid var(--amber)"></i>В работе</span>
+      <span><i class="dot" style="background:#fff;border:1px solid var(--line)"></i>Не начато</span>
+    </div>
     <table id="planTable"></table>
   </div>
 
   <div class="panel">
     <h2>Календарь по неделям</h2>
+    <p style="font-size:12.5px; color:var(--muted); margin-bottom:14px; line-height:1.6;">
+      Каждая строка — одна кампания. Синяя/фиолетовая полоса показывает, в какие недели кампания
+      реально идёт (от старта до финиша). Цветная точка в клетке — это дедлайн (бриф, креатив,
+      согласование или загрузка), который попадает на эту неделю: <b style="color:var(--red)">красная</b> —
+      уже просрочен, <b style="color:var(--amber)">жёлтая</b> — ещё впереди, но скоро. Столбец с
+      сегодняшней неделей подсвечен бежевым фоном.
+    </p>
     <table class="gantt" id="gantt"></table>
     <div class="legend">
       <span><i class="dot" style="background:#2C3E7A"></i>Перформанс</span>
@@ -123,7 +150,13 @@
   </div>
 
   <div class="panel">
-    <h2>Недельный дайджест</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+      <h2 style="margin-bottom:0;">Недельный дайджест</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="reminderEmail" type="email" placeholder="email ответственного" style="width:200px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:12px;">
+        <button class="btn-ghost" onclick="sendReminder()">✉️ Отправить дайджест</button>
+      </div>
+    </div>
     <div class="digest" id="digest"></div>
   </div>
 
@@ -193,16 +226,77 @@ function isoWeek(dateStr){
   const week = 1 + Math.round(diff / 7);
   return `${target.getFullYear()}-W${String(week).padStart(2,"0")}`;
 }
+function fmtDate(iso){
+  if (!iso) return "—";
+  const [y,m,d] = iso.split("-");
+  return `${d}.${m}.${y}`;
+}
+function weekNum(isoWk){ return isoWk.split("-W")[1].replace(/^0/,""); }
 
-function assignChannel(type){
+function splitType(rawVal){
+  if (rawVal.startsWith("Retail support:")) {
+    return {type: "Retail support", forcedDest: rawVal.split(":")[1]};
+  }
+  return {type: rawVal, forcedDest: null};
+}
+
+function assignChannel(rawType){
+  const {type, forcedDest} = splitType(rawType);
   const rule = TYPE_TO_CHANNELS[type];
   if (!rule) return null;
   rrCounters[type] = rrCounters[type] || {c:0, d:0};
   const channelName = rule.channels[rrCounters[type].c % rule.channels.length];
-  const destination = rule.destPool[rrCounters[type].d % rule.destPool.length];
-  rrCounters[type].c++; rrCounters[type].d++;
+  rrCounters[type].c++;
+  return assignForChannel(channelName, type, forcedDest);
+}
+
+function expandDestinations(list){
+  const out = [];
+  list.forEach(d => { if (d === "дистрибьюторы") out.push(...DISTRIBUTORS); else out.push(d); });
+  return out;
+}
+
+function assignForChannel(channelName, type, forcedDest){
+  const rule = TYPE_TO_CHANNELS[type];
   const matrixRow = CHANNEL_MATRIX.find(m => m.channel === channelName);
-  return {channel: channelName, destination, format: matrixRow ? matrixRow.formats : ""};
+  if (forcedDest) {
+    // manager picked a specific distributor in the dropdown — no round robin needed, just use it
+    return {channel: channelName, destination: forcedDest, format: matrixRow.formats};
+  }
+  const allDest = expandDestinations(matrixRow.destinations);
+  // a channel can technically reach more destinations than a given campaign TYPE should use
+  // (e.g. Meta lists samsung.kz too, but for "Retail support" we only want distributors) —
+  // intersect the channel's real destinations with what this type is allowed to target.
+  const pool = allDest.filter(d => rule.destPool.includes(d));
+  const usablePool = pool.length ? pool : rule.destPool;
+  const key = "chan:" + channelName;
+  rrCounters[key] = rrCounters[key] || 0;
+  const destination = usablePool[rrCounters[key] % usablePool.length];
+  rrCounters[key]++;
+  return {channel: channelName, destination, format: matrixRow.formats};
+}
+
+function renderChannelOptions(){
+  const {type, forcedDest} = splitType(document.getElementById("f-type").value);
+  const rule = TYPE_TO_CHANNELS[type];
+  const box = document.getElementById("channelOptions");
+  box.innerHTML = `<span style="color:var(--muted);align-self:center;">Или выбери конкретные каналы:</span>` +
+    rule.channels.map(ch => {
+      const row = CHANNEL_MATRIX.find(m=>m.channel===ch);
+      const dest = forcedDest ? [forcedDest] : (expandDestinations(row.destinations).filter(d=>rule.destPool.includes(d)));
+      return `<label style="display:flex;align-items:center;gap:6px;border:1px solid var(--line);padding:6px 10px;border-radius:8px;cursor:pointer;">
+        <input type="checkbox" class="channel-check" value="${ch}"> ${ch}
+        <span style="color:var(--muted);font-size:11px;">(${(dest.length?dest:row.destinations).join(", ")})</span>
+      </label>`;
+    }).join("");
+  renderDistributorOptions(type);
+}
+
+function renderDistributorOptions(type){
+  const box = document.getElementById("distributorOptions");
+  if (type !== "Retail support") { box.innerHTML = ""; return; }
+  box.innerHTML = `<span style="color:var(--muted);align-self:center;">Или выбери конкретных ритейлеров (иначе агент чередует сам):</span>` +
+    DISTRIBUTORS.map(d => `<label class="dist-box"><input type="checkbox" class="dist-check" value="${d}"> ${d}</label>`).join("");
 }
 
 function recalcOne(c){
@@ -218,7 +312,7 @@ function recalcOne(c){
 }
 
 function runChecks(){
-  const report = {overdue:[], missingCreative:[], weekOverload:[], mediaWithoutPerf:[], coverageGap:[]};
+  const report = {overdue:[], missingCreative:[], weekOverload:[], mediaWithoutPerf:[], coverageGap:[], flatMismatch:[]};
   campaigns.forEach(c => {
     ["Бриф до","Креатив до","Согл. до","Загрузка до"].forEach(k => {
       if (c[k] && c[k] < TODAY && c["Статус"] !== "Готово") {
@@ -228,6 +322,14 @@ function runChecks(){
     if (c["Статус"] !== "Готово" && c["Старт"]) {
       const days = (new Date(c["Старт"]) - new Date(TODAY)) / 86400000;
       if (days < 7) report.missingCreative.push({id:c.ID, старт:c["Старт"], статус:c["Статус"], модель:c["Модель"]});
+    }
+    // does the single flat −14/−7/−3 rule (as used in the original source file) give a
+    // DIFFERENT — and wrong — brief deadline compared to this campaign's real per-type rule?
+    if (c["Старт"] && c["Тип кампании"] !== "Промо-запуск") {
+      const flatBrief = prevBusinessDay(addDays(c["Старт"], 14));
+      if (c["Бриф до"] && flatBrief !== c["Бриф до"]) {
+        report.flatMismatch.push({id:c.ID, модель:c["Модель"], тип:c["Тип кампании"], верно:c["Бриф до"], поФлэту:flatBrief});
+      }
     }
   });
 
@@ -254,43 +356,97 @@ function nextId(){
 }
 
 function previewAssignment(){
-  const type = document.getElementById("f-type").value;
-  const assign = assignChannelPreview(type);
+  const rawType = document.getElementById("f-type").value;
+  renderChannelOptions();
+  const checkedChannels = Array.from(document.querySelectorAll(".channel-check:checked")).map(el=>el.value);
+  const checkedDists = Array.from(document.querySelectorAll(".dist-check:checked")).map(el=>el.value);
   const el = document.getElementById("assignPreview");
   el.style.display = "block";
-  el.innerHTML = `Агент назначит: <b>${assign.channel}</b> → <b>${assign.destination}</b> · формат: ${assign.format}`;
+  const total = (checkedChannels.length || 1) * (checkedDists.length || 1);
+  if (checkedChannels.length || checkedDists.length) {
+    el.innerHTML = `Будет создано <b>${total}</b> кампани${total===1?'я':(total<5?'и':'й')}` +
+      (checkedChannels.length ? ` · каналы: ${checkedChannels.join(", ")}` : "") +
+      (checkedDists.length ? ` · ритейлеры: ${checkedDists.join(", ")}` : "");
+  } else {
+    const assign = assignChannelPreview(rawType);
+    el.innerHTML = `Авто-режим — агент назначит: <b>${assign.channel}</b> → <b>${assign.destination}</b> · формат: ${assign.format}`;
+  }
 }
-function assignChannelPreview(type){
-  // peek at next assignment without consuming the round-robin counter
+function assignChannelPreview(rawType){
+  const {type, forcedDest} = splitType(rawType);
   const rule = TYPE_TO_CHANNELS[type];
-  const rr = rrCounters[type] || {c:0,d:0};
+  const rr = rrCounters[type] || {c:0};
   const channelName = rule.channels[rr.c % rule.channels.length];
-  const destination = rule.destPool[rr.d % rule.destPool.length];
   const matrixRow = CHANNEL_MATRIX.find(m => m.channel === channelName);
-  return {channel:channelName, destination, format: matrixRow ? matrixRow.formats : ""};
+  if (forcedDest) return {channel:channelName, destination:forcedDest, format:matrixRow.formats};
+  const allDest = expandDestinations(matrixRow.destinations);
+  const pool = allDest.filter(d => rule.destPool.includes(d));
+  const usablePool = pool.length ? pool : rule.destPool;
+  const key = "chan:" + channelName;
+  const destination = usablePool[(rrCounters[key]||0) % usablePool.length];
+  return {channel:channelName, destination, format: matrixRow.formats};
 }
 
 function addCampaign(){
   const model = document.getElementById("f-model").value.trim();
-  const type = document.getElementById("f-type").value;
+  const rawType = document.getElementById("f-type").value;
+  const {type, forcedDest} = splitType(rawType);
   const start = document.getElementById("f-start").value;
   const end = document.getElementById("f-end").value || start;
   if (!model || !start) { alert("Укажите модель и дату старта"); return; }
-  const assign = assignChannel(type);
-  const c = {
-    ID: nextId(), "Модель": model, "Тип кампании": type,
-    "Канал": assign.channel, "Назначение (куда ведём)": assign.destination, "Формат": assign.format,
-    "Старт": start, "Финиш": end, "Статус": "Не начато",
-  };
-  recalcOne(c);
-  campaigns.push(c);
+
+  const checkedChannels = Array.from(document.querySelectorAll(".channel-check:checked")).map(el=>el.value);
+  const checkedDists = Array.from(document.querySelectorAll(".dist-check:checked")).map(el=>el.value);
+  const channelsToAssign = checkedChannels.length ? checkedChannels : [null];
+  const distsToAssign = checkedDists.length ? checkedDists : [forcedDest]; // forcedDest is usually null here
+
+  channelsToAssign.forEach(chName => {
+    distsToAssign.forEach(distName => {
+      let assign;
+      if (chName && distName) assign = assignForChannel(chName, type, distName);
+      else if (chName && !distName) assign = assignForChannel(chName, type, null);
+      else if (!chName && distName) assign = assignChannel(type + ":" + distName);
+      else assign = assignChannel(rawType);
+
+      const c = {
+        ID: nextId(), "Модель": model, "Тип кампании": type,
+        "Канал": assign.channel, "Назначение (куда ведём)": assign.destination, "Формат": assign.format,
+        "Старт": start, "Финиш": end, "Статус": "Не начато",
+      };
+      recalcOne(c);
+      campaigns.push(c);
+    });
+  });
+
   document.getElementById("f-model").value = "";
   document.getElementById("f-start").value = "";
   document.getElementById("f-end").value = "";
-  document.getElementById("assignPreview").style.display = "none";
-  save(); render();
+  document.querySelectorAll(".channel-check, .dist-check").forEach(el=>el.checked=false);
+  save(); render(); previewAssignment();
 }
 
+function sendReminder(){
+  const email = document.getElementById("reminderEmail").value.trim();
+  const report = window.lastReport;
+  if (!report) return;
+  let body = `Недельный дайджест по контент-плану — ${fmtDate(TODAY)}\n\n`;
+  body += `ГОРИТ:\n`;
+  body += report.overdue.length ? report.overdue.map(o=>`- ${o.id} (${o.модель}) — просрочен этап «${o.этап}»`).join("\n") : "- просрочек нет";
+  body += `\n\nНА ЭТОЙ НЕДЕЛЕ:\n`;
+  body += report.missingCreative.length ? report.missingCreative.slice(0,8).map(m=>`- ${m.id} (${m.модель}) — старт ${fmtDate(m.старт)}, статус «${m.статус}»`).join("\n") : "- срочных задач нет";
+  body += `\n\nГЕНЕРАТОР: Digital Content Plan App`;
+  const subject = encodeURIComponent(`Недельный дайджест контент-плана — ${fmtDate(TODAY)}`);
+  const mailto = `mailto:${email}?subject=${subject}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailto;
+}
+
+function updateDate(id, field, val){
+  const c = campaigns.find(c=>c.ID===id);
+  if (!c || !val) return;
+  c[field] = val;
+  recalcOne(c);
+  save(); render();
+}
 function updateStatus(id, val){
   const c = campaigns.find(c=>c.ID===id); if (c) c["Статус"] = val;
   save(); render();
@@ -298,6 +454,76 @@ function updateStatus(id, val){
 function deleteCampaign(id){
   campaigns = campaigns.filter(c=>c.ID!==id);
   save(); render();
+}
+
+function excelSerialToIso(v){
+  // handles both already-formatted date strings and raw Excel serial numbers, just in case
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0,10);
+  if (typeof v === "number") {
+    const d = new Date(Math.round((v - 25569) * 86400 * 1000));
+    return d.toISOString().slice(0,10);
+  }
+  return null;
+}
+
+function importExcel(ev){
+  const file = ev.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:"array", cellDates:true});
+      const sheetName = wb.SheetNames.find(n => n.includes("Контент-план")) || wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, dateNF:"yyyy-mm-dd"});
+      const headerIdx = rows.findIndex(r => r[0] === "ID");
+      if (headerIdx === -1) { alert("Не нашла заголовок «ID» в первой вкладке — проверь формат файла."); return; }
+      const headers = rows[headerIdx];
+      const col = name => headers.indexOf(name);
+
+      const imported = [];
+      for (let i = headerIdx + 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r || !r[0] || !String(r[0]).startsWith("C-")) continue;
+        const model = r[col("Модель")];
+        const type = r[col("Тип кампании")];
+        const start = excelSerialToIso(r[col("Старт")]);
+        if (!model || !type || !start) continue; // minimum viable row per the task's own scenario
+
+        const hasChannel = col("Канал") >= 0 && r[col("Канал")];
+        const hasDest = col("Назначение (куда ведём)") >= 0 && r[col("Назначение (куда ведём)")];
+        let channel = hasChannel ? r[col("Канал")] : null;
+        let destination = hasDest ? r[col("Назначение (куда ведём)")] : null;
+        let format = col("Формат") >= 0 ? r[col("Формат")] : null;
+
+        if (!channel || !destination) {
+          // file only gave the minimum (model + type + date) — agent fills the rest, same as manual add
+          const assign = assignChannel(type);
+          channel = channel || assign.channel;
+          destination = destination || assign.destination;
+          format = format || assign.format;
+        }
+
+        const c = {
+          ID: r[0], "Модель": model, "Тип кампании": type,
+          "Канал": channel, "Назначение (куда ведём)": destination, "Формат": format,
+          "Старт": start, "Финиш": excelSerialToIso(r[col("Финиш")]) || start,
+          "Статус": (col("Статус") >= 0 && r[col("Статус")]) || "Не начато",
+        };
+        recalcOne(c);
+        imported.push(c);
+      }
+
+      if (imported.length === 0) { alert("Не нашла ни одной строки с ID, моделью, типом и датой старта."); return; }
+
+      const replace = confirm(`Нашла ${imported.length} кампани${imported.length===1?'ю':(imported.length<5?'и':'й')} в файле.\n\nOK — заменить текущий план этим файлом.\nОтмена — добавить эти кампании к текущему плану.`);
+      campaigns = replace ? imported : [...campaigns, ...imported];
+      save(); render();
+    } catch(err) {
+      alert("Не смогла прочитать файл: " + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  ev.target.value = ""; // allow re-uploading the same filename later
 }
 
 function save(){
@@ -328,30 +554,61 @@ function importJson(ev){
   reader.readAsText(file);
 }
 
+function showDetail(key){
+  const report = window.lastReport;
+  const panel = document.getElementById("detailPanel");
+  let title = "", rows = "";
+  if (key === "total") {
+    title = "Все активности в плане";
+    rows = campaigns.map(c=>{
+      const tag = c["Статус"]==="Готово"?"ok":(c["Статус"]==="В работе"?"warn":"mid");
+      return `<li><span class="tag ${tag==='ok'?'high':'mid'}" style="${tag==='ok'?'background:#E4F4EC;color:var(--green)':''}">${c["Статус"]}</span> <span><b>${c.ID}</b> — ${c["Модель"]}, ${c["Тип кампании"]}, старт ${fmtDate(c["Старт"])}</span></li>`;
+    }).join("");
+  } else if (key === "overdue") {
+    title = "Кампании с просрочкой";
+    rows = report.overdue.map(o=>`<li><span class="tag high">${o.этап}</span> <span><b>${o.id}</b> — модель ${o.модель}</span></li>`).join("");
+  } else if (key === "missingCreative") {
+    title = "Старт меньше чем через 7 дней, креатив не готов";
+    rows = report.missingCreative.map(m=>`<li><span class="tag mid">старт ${fmtDate(m.старт)}</span> <span><b>${m.id}</b> — модель ${m.модель}, статус «${m.статус}»</span></li>`).join("");
+  } else if (key === "coverageGap") {
+    title = "Модели без точки продаж (маркетплейс/дистрибьютор)";
+    rows = report.coverageGap.map(g=>`<li><span class="tag mid">нет покрытия</span> <span><b>${g.модель}</b> — есть реклама, но нет пути купить через партнёра</span></li>`).join("");
+  }
+  panel.style.display = "block";
+  panel.innerHTML = `<h2>${title} <span style="cursor:pointer;color:var(--muted);font-weight:400" onclick="document.getElementById('detailPanel').style.display='none'">✕ закрыть</span></h2>
+    <ul class="conflict-list">${rows || "<div class='empty'>Пусто.</div>"}</ul>`;
+  panel.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
 function render(){
   campaigns.forEach(recalcOne);
   const report = runChecks();
+  window.lastReport = report; // for detail drill-down clicks
   const todayWeek = isoWeek(TODAY);
 
-  document.getElementById("subline").textContent = `Сегодня ${TODAY} · ${campaigns.length} активностей в плане`;
+  document.getElementById("subline").textContent = `Сегодня ${fmtDate(TODAY)} · Неделя №${weekNum(todayWeek)} · ${campaigns.length} активностей в плане`;
 
   const overdueSet = new Set(report.overdue.map(o=>o.id));
   document.getElementById("summary").innerHTML = [
-    {n:campaigns.length, l:"активностей всего"},
-    {n:overdueSet.size, l:"с просрочкой", warn:overdueSet.size>0},
-    {n:report.missingCreative.length, l:"старт < 7дн без креатива", warn:report.missingCreative.length>0},
-    {n:report.coverageGap.length, l:"моделей без покрытия", warn:report.coverageGap.length>0},
-  ].map(k=>`<div class="kpi ${k.warn?'warn':''}"><div class="n">${k.n}</div><div class="l">${k.l}</div></div>`).join("");
+    {n:campaigns.length, l:"активностей всего", key:"total"},
+    {n:overdueSet.size, l:"с просрочкой", warn:overdueSet.size>0, key:"overdue"},
+    {n:report.missingCreative.length, l:"не готовы к запуску", warn:report.missingCreative.length>0, key:"missingCreative"},
+    {n:report.coverageGap.length, l:"моделей без покрытия", warn:report.coverageGap.length>0, key:"coverageGap"},
+  ].map(k=>`<div class="kpi ${k.warn?'warn':''}" ${k.key?`onclick="showDetail('${k.key}')" style="cursor:pointer"`:''}>
+      <div class="n">${k.n}</div><div class="l">${k.l}${k.key?' ↓':''}</div></div>`).join("");
 
   // plan table
   let rows = `<tr><th>ID</th><th>Модель</th><th>Тип</th><th>Канал</th><th>Назначение</th><th>Старт</th><th>Финиш</th>
     <th>Бриф до</th><th>Креатив до</th><th>Согл. до</th><th>Статус</th><th></th></tr>`;
   campaigns.forEach(c => {
     const late = overdueSet.has(c.ID);
-    rows += `<tr>
+    const rowClass = c["Статус"]==="Готово" ? "row-done" : (c["Статус"]==="В работе" ? "row-progress" : "");
+    rows += `<tr class="${rowClass}">
       <td>${c.ID}</td><td>${c["Модель"]}</td><td>${c["Тип кампании"]}</td><td>${c["Канал"]||"—"}</td>
-      <td>${c["Назначение (куда ведём)"]||"—"}</td><td>${c["Старт"]||"—"}</td><td>${c["Финиш"]||"—"}</td>
-      <td>${c["Бриф до"]||"—"}</td><td>${c["Креатив до"]||"—"}</td><td>${c["Согл. до"]||"—"}</td>
+      <td>${c["Назначение (куда ведём)"]||"—"}</td>
+      <td><input type="date" value="${c["Старт"]||""}" style="border:1px solid var(--line);border-radius:6px;padding:3px 5px;font-size:11.5px;" onchange="updateDate('${c.ID}','Старт',this.value)"></td>
+      <td><input type="date" value="${c["Финиш"]||""}" style="border:1px solid var(--line);border-radius:6px;padding:3px 5px;font-size:11.5px;" onchange="updateDate('${c.ID}','Финиш',this.value)"></td>
+      <td>${fmtDate(c["Бриф до"])}</td><td>${fmtDate(c["Креатив до"])}</td><td>${fmtDate(c["Согл. до"])}</td>
       <td><select class="status-select" onchange="updateStatus('${c.ID}', this.value)">
         ${["Не начато","В работе","Готово"].map(s=>`<option ${c["Статус"]===s?"selected":""}>${s}</option>`).join("")}
       </select> ${late?'<span class="badge late">риск</span>':''}</td>
@@ -368,7 +625,7 @@ function render(){
   const weeks = []; let y=fy,w=fw;
   while (y<ly || (y===ly && w<=lw)) { weeks.push(`${y}-W${String(w).padStart(2,"0")}`); w++; if(w>52){w=1;y++;} }
 
-  let thead = "<tr><th style='text-align:left'>Кампания</th>" + weeks.map(w=>`<th>${w.split("-W")[1]}</th>`).join("") + "</tr>";
+  let thead = "<tr><th style='text-align:left'>Кампания</th>" + weeks.map(w=>`<th>Нед ${weekNum(w)}</th>`).join("") + "</tr>";
   let grows = "";
   campaigns.forEach(c => {
     const sw = c["Старт"] ? isoWeek(c["Старт"]) : null, ew = c["Финиш"] ? isoWeek(c["Финиш"]) : sw;
@@ -400,16 +657,33 @@ function render(){
   d += gaps.length ? gaps.join("\n") : "— дыр не найдено";
   document.getElementById("digest").innerHTML = d;
 
-  // conflicts
+  // conflicts — always show every category, even when clean, so it's visible the check actually ran
   let html = "";
-  report.overdue.forEach(o => html += `<li><span class="tag high">Просрочка</span> <span>${o.id} (${o.модель}) — этап «${o.этап}»</span></li>`);
-  report.mediaWithoutPerf.forEach(g => html += `<li><span class="tag mid">Медийка без перформанса</span> <span>${g.модель}: ${g.кампании.join(", ")}</span></li>`);
-  report.coverageGap.forEach(g => html += `<li><span class="tag mid">Нет покрытия</span> <span>${g.модель}: ${g.проблема}</span></li>`);
-  report.weekOverload.forEach(g => html += `<li><span class="tag mid">Перегруз недели</span> <span>${g.неделя}: ${g.кампании.join(", ")}</span></li>`);
-  document.getElementById("conflicts").innerHTML = html || "<div class='empty'>Конфликтов не найдено.</div>";
+  html += `<li><span class="tag high">Расхождение с флэт-правилом</span> <span>${report.flatMismatch.length} кампани${report.flatMismatch.length===1?'я':'й'} посчитаны верно по правилу своего типа, а не единым −14/−7/−3 (как в исходном файле)</span></li>`;
+  report.flatMismatch.slice(0,6).forEach(f => html += `<li style="padding-left:20px;font-size:11.5px;color:var(--muted)">↳ ${f.id} (${f.модель}, ${f.тип}): верно ${fmtDate(f.верно)}, по флэт-правилу было бы ${fmtDate(f.поФлэту)}</li>`);
+
+  html += report.overdue.length
+    ? report.overdue.map(o => `<li><span class="tag high">Просрочка</span> <span>${o.id} (${o.модель}) — этап «${o.этап}»</span></li>`).join("")
+    : `<li><span class="tag" style="background:#E4F4EC;color:var(--green)">Чисто</span> <span>Просроченных дедлайнов нет</span></li>`;
+
+  html += report.mediaWithoutPerf.length
+    ? report.mediaWithoutPerf.map(g => `<li><span class="tag mid">Медийка без перформанса</span> <span>${g.модель}: ${g.кампании.join(", ")}</span></li>`).join("")
+    : `<li><span class="tag" style="background:#E4F4EC;color:var(--green)">Чисто</span> <span>Вся медийка поддержана перформанс-каналами</span></li>`;
+
+  html += report.coverageGap.length
+    ? report.coverageGap.map(g => `<li><span class="tag mid">Нет покрытия</span> <span>${g.модель}: ${g.проблема}</span></li>`).join("")
+    : `<li><span class="tag" style="background:#E4F4EC;color:var(--green)">Чисто</span> <span>У всех моделей есть точка продаж</span></li>`;
+
+  html += report.weekOverload.length
+    ? report.weekOverload.map(g => `<li><span class="tag mid">Перегруз недели</span> <span>${g.неделя}: ${g.кампании.join(", ")} — больше 4 запусков</span></li>`).join("")
+    : `<li><span class="tag" style="background:#E4F4EC;color:var(--green)">Чисто</span> <span>Ни одна неделя не превышает 4 запуска</span></li>`;
+
+  document.getElementById("conflicts").innerHTML = html;
 }
 
 document.getElementById("f-type").addEventListener("change", previewAssignment);
+document.getElementById("channelOptions").addEventListener("change", previewAssignment);
+document.getElementById("distributorOptions").addEventListener("change", previewAssignment);
 tryLoad();
 previewAssignment();
 render();
